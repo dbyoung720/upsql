@@ -183,7 +183,7 @@ begin
       if not SameViewStructure(strOldDataBaseName, strUpdateDatabaseName, strTableName) then
       begin
         frmUpdate.LogInfo(Format('Éý¼¶ÊÓÍ¼£º%s', [strTableName]));
-        strTempTableName := 'temp_' + strTableName;
+        strTempTableName := 'db_temp_' + strTableName;
         strFields        := GetDataFields(strOldDataBaseName, strUpdateDatabaseName, strTableName);
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;

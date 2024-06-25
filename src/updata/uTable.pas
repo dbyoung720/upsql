@@ -156,7 +156,7 @@ const
     ' INSERT INTO %s.dbo.%s(%s) select %s from %s.dbo.%s ' + // 2 将旧表数据插入新的临时表
     ' set IDENTITY_INSERT %s.dbo.%s OFF ' +                  // 2 关闭将显式值插入表的标识列中
     ' DROP TABLE %s.dbo.%s ' +                               // 3 删除旧表
-    ' use %s EXEC sp_rename N''%s'', N''%s''';              // 4 将临时新表重命名为旧表名
+    ' use %s EXEC sp_rename N''%s'', N''%s''';               // 4 将临时新表重命名为旧表名
 var
   strTableName    : string;
   strTempTableName: string;
