@@ -206,7 +206,6 @@ begin
             end;
           end;
         end;
-
       end;
     end;
     frmUpdate.qry2.Next;
