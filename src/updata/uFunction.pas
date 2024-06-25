@@ -45,7 +45,7 @@ begin
     begin
       frmUpdate.qry3.Close;
       frmUpdate.qry3.SQL.Clear;
-      frmUpdate.qry3.SQL.Add(Format('use %s', [strOldDataBaseName]));
+      frmUpdate.qry3.SQL.Add(Format('use %s ', [strOldDataBaseName]));
       frmUpdate.qry3.SQL.Add(Format(c_strSQL, [strUpdateDatabaseName, QuotedStr(strFuncName)]));
       frmUpdate.qry3.Open;
       if frmUpdate.qry3.RecordCount > 0 then

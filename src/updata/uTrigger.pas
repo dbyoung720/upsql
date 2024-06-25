@@ -52,8 +52,7 @@ begin
         frmUpdate.LogInfo(Format('´´½¨´¥·¢Æ÷£º%s', [strTriggerName]));
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Add(Format('use %s ', [strOldDataBaseName]));
-        frmUpdate.qry4.SQL.Add(frmUpdate.qry3.Fields[0].AsString);
+        frmUpdate.qry4.SQL.Text := Format('use %s %s', [strOldDataBaseName, frmUpdate.qry3.Fields[0].AsString]);
         try
           frmUpdate.qry4.ExecSQL;
         except
