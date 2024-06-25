@@ -2,7 +2,7 @@ unit uProcdure;
 
 interface
 
-uses System.SysUtils, System.Variants, Vcl.Forms, Data.DB, Data.Win.ADODB;
+uses System.SysUtils, System.Variants, System.IOUtils, Vcl.Forms, Data.DB, Data.Win.ADODB;
 
 { 创建不存在的存储过程 }
 procedure CreateNotExistProc(const strOldDataBaseName, strUpdateDatabaseName: string);
@@ -23,6 +23,7 @@ const
   c_strSQL = 'use %s SELECT text FROM sys.syscomments WHERE OBJECTPROPERTY(id, ''IsProcedure'') = 1 and OBJECT_NAME(id)=%s';
 var
   strProcName: string;
+  strTempFile: string;
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
@@ -50,24 +51,18 @@ begin
       if frmUpdate.qry3.RecordCount > 0 then
       begin
         frmUpdate.LogInfo(Format('创建存储过程：%s', [strProcName]));
-        // frmUpdate.qry4.Close;
-        // frmUpdate.qry4.SQL.Clear;
-        // frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
-        // frmUpdate.qry4.SQL.Add('GO');
-        // frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
-        // frmUpdate.qry4.SQL.Add('GO');
-        // frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
-        // frmUpdate.qry4.SQL.Add('GO');
-        // frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
-        // try
-        // frmUpdate.qry4.ExecSQL;
-        // except
-        // on E: Exception do
-        // begin
-        // frmUpdate.LogInfo(Format('创建存储过程失败。存储过程名称: %s，原因: %s', [strProcName, E.Message]));
-        // frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
-        // end;
-        // end;
+        frmUpdate.qry4.Close;
+        frmUpdate.qry4.SQL.Clear;
+        strTempFile := TPath.GetTempPath + 'update.sql';
+        frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
+        frmUpdate.qry4.SQL.SaveToFile(strTempFile, TEncoding.UTF8);
+        frmUpdate.ShellCommandUpdateFile(strTempFile);
       end;
     end;
     frmUpdate.qry2.Next;
@@ -131,12 +126,6 @@ begin
   frmUpdate.qry4.SQL.Text := Format('exec %s.dbo.sp_helptext %s', [strUpdateDatabaseName, QuotedStr(strProcName)]);
   frmUpdate.qry4.Open;
 
-  if frmUpdate.qry4.RecordCount <> frmUpdate.qry3.RecordCount then
-  begin
-    Result := False;
-    Exit;
-  end;
-
   Result := True;
   frmUpdate.qry3.First;
   frmUpdate.qry4.First;
@@ -144,10 +133,13 @@ begin
   begin
     strOldProcCode := Trim(frmUpdate.qry3.Fields[0].AsString);
     strNewProcCode := Trim(frmUpdate.qry4.Fields[0].AsString);
-    if not SameText(strOldProcCode, strNewProcCode) then
+    if (strOldProcCode <> '') and (strNewProcCode <> '') then
     begin
-      Result := False;
-      Break;
+      if not SameText(strOldProcCode, strNewProcCode) then
+      begin
+        Result := False;
+        Break;
+      end;
     end;
     frmUpdate.qry3.Next;
     frmUpdate.qry4.Next;
@@ -158,6 +150,7 @@ end;
 procedure UpdateYesExistProc(const strOldDataBaseName, strUpdateDatabaseName: string);
 var
   strProcName: string;
+  strTempFile: string;
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
@@ -182,7 +175,7 @@ begin
         frmUpdate.LogInfo(Format('升级存储过程：%s', [strProcName]));
         frmUpdate.qry3.Close;
         frmUpdate.qry3.SQL.Clear;
-        frmUpdate.qry3.SQL.Text := Format('drop procedure %s.dbo.%s', [strOldDataBaseName, strProcName]);
+        frmUpdate.qry3.SQL.Text := Format('use %s drop procedure %s', [strOldDataBaseName, strProcName]);
         try
           frmUpdate.qry3.ExecSQL;
         except
@@ -201,16 +194,16 @@ begin
         begin
           frmUpdate.qry4.Close;
           frmUpdate.qry4.SQL.Clear;
-          frmUpdate.qry4.SQL.Text := Format('use %s %s', [strOldDataBaseName, frmUpdate.qry3.Fields[0].AsString]);
-          try
-            frmUpdate.qry4.ExecSQL;
-          except
-            on E: Exception do
-            begin
-              frmUpdate.LogInfo(Format('升级存储过程失败2。存储过程名称: %s，原因: %s', [strProcName, E.Message]));
-              frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
-            end;
-          end;
+          strTempFile := TPath.GetTempPath + 'update.sql';
+          frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
+          frmUpdate.qry4.SQL.SaveToFile(strTempFile, TEncoding.UTF8);
+          frmUpdate.ShellCommandUpdateFile(strTempFile);
         end;
       end;
     end;

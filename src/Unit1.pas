@@ -2,7 +2,7 @@ unit Unit1;
 
 interface
 
-uses System.SysUtils, System.StrUtils, System.Classes, System.Types, System.IOUtils, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Data.DB, Data.Win.ADODB, Vcl.StdCtrls, Vcl.Buttons;
+uses Winapi.Windows, Winapi.ShellAPI, System.SysUtils, System.StrUtils, System.Classes, System.Types, System.IOUtils, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Data.DB, Data.Win.ADODB, Vcl.StdCtrls, Vcl.Buttons;
 
 type
   TfrmUpdate = class(TForm)
@@ -43,6 +43,7 @@ type
   public
     { »’÷æ }
     procedure LogInfo(const strTip: string);
+    procedure ShellCommandUpdateFile(const strFileName: string);
   end;
 
 var
@@ -57,6 +58,31 @@ uses uTable, uView, uProcdure, uTrigger, uFunction;
 procedure TfrmUpdate.LogInfo(const strTip: string);
 begin
   mmoLog.Lines.Add(Format('%s%s%s', [FormatDateTime('yyyy-MM-dd HH:mm:ss', Now), Char(9), strTip]));
+end;
+
+procedure TfrmUpdate.ShellCommandUpdateFile(const strFileName: string);
+var
+  strDatabaseName: string;
+  strServerName  : string;
+  strLoginName   : string;
+  strLoginPass   : string;
+  strCMDFileName : string;
+begin
+  strDatabaseName := cbbLibrary.Text;
+  strServerName   := con1.Properties['Data Source'].Value;
+  strLoginName    := con1.Properties['User ID'].Value;
+  strLoginPass    := con1.Properties['Password'].Value;
+  strCMDFileName  := TPath.GetTempPath + 'update.cmd';
+
+  with TStringList.Create do
+  begin
+    Add('@echo off');
+    Add(Format('sqlcmd -S %s -d %s -U %s -P %s -i "%s"', [strServerName, strDatabaseName, strLoginName, strLoginPass, strFileName]));
+    Add('del /a /f /q %0');
+    SaveToFile(strCMDFileName);
+    free;
+  end;
+  WinExec(PAnsiChar(AnsiString(strCMDFileName)), SW_HIDE);
 end;
 
 procedure TfrmUpdate.btnSelectClick(Sender: TObject);

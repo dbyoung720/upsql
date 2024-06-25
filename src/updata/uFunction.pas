@@ -2,7 +2,7 @@ unit uFunction;
 
 interface
 
-uses System.SysUtils, System.Variants, Vcl.Forms, Data.DB, Data.Win.ADODB;
+uses System.SysUtils, System.Variants, System.IOUtils, Vcl.Forms, Data.DB, Data.Win.ADODB;
 
 { 创建不存在的自定义函数 }
 procedure CreateNotExistFunc(const strOldDataBaseName, strUpdateDatabaseName: string);
@@ -23,6 +23,7 @@ const
   c_strSQL = 'use %s SELECT text FROM sys.syscomments where (OBJECTPROPERTY(id, ''IsScalarFunction'') = 1) or (OBJECTPROPERTY(id, ''IsTableFunction'') = 1) and OBJECT_NAME(id)=%s';
 var
   strFuncName: string;
+  strTempFile: string;
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
@@ -53,16 +54,16 @@ begin
         frmUpdate.LogInfo(Format('创建自定义函数：%s', [strFuncName]));
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Text := Format('%s', [frmUpdate.qry3.Fields[0].AsString]);
-        try
-          frmUpdate.qry4.ExecSQL;
-        except
-          on E: Exception do
-          begin
-            frmUpdate.LogInfo(Format('创建自定义函数失败。触发器名称: %s，原因: %s', [strFuncName, E.Message]));
-            frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
-          end;
-        end;
+        strTempFile := TPath.GetTempPath + 'update.sql';
+        frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
+        frmUpdate.qry4.SQL.Add('GO');
+        frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
+        frmUpdate.qry4.SQL.SaveToFile(strTempFile, TEncoding.UTF8);
+        frmUpdate.ShellCommandUpdateFile(strTempFile);
       end;
     end;
     frmUpdate.qry2.Next;
@@ -153,6 +154,7 @@ end;
 procedure UpdateYesExistFunc(const strOldDataBaseName, strUpdateDatabaseName: string);
 var
   strFuncName: string;
+  strTempFile: string;
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
@@ -196,16 +198,16 @@ begin
         begin
           frmUpdate.qry4.Close;
           frmUpdate.qry4.SQL.Clear;
-          frmUpdate.qry4.SQL.Text := Format('%s', [frmUpdate.qry3.Fields[0].AsString]);
-          try
-            frmUpdate.qry4.ExecSQL;
-          except
-            on E: Exception do
-            begin
-              frmUpdate.LogInfo(Format('升级自定义函数失败2。自定义函数名称: %s，原因: %s', [strFuncName, E.Message]));
-              frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
-            end;
-          end;
+          strTempFile := TPath.GetTempPath + 'update.sql';
+          frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
+          frmUpdate.qry4.SQL.Add('GO');
+          frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
+          frmUpdate.qry4.SQL.SaveToFile(strTempFile, TEncoding.UTF8);
+          frmUpdate.ShellCommandUpdateFile(strTempFile);
         end;
       end;
     end;
