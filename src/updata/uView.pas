@@ -153,7 +153,7 @@ const
   c_strSQL =                                                          //
     ' Use master select * into %s.dbo.%s from %s.dbo.%s where 0=1 ' + // 1 创建临时新视图
     ' set IDENTITY_INSERT %s.dbo.%s ON ' +                            // 2 开启将显式值插入视图的标识列中
-    ' INSERT INTO %s(%s) select %s from %s.dbo.%s ' +                 // 2 将旧视图数据插入新的临时视图
+    ' INSERT INTO %s.dbo.%s(%s) select %s from %s.dbo.%s ' +                 // 2 将旧视图数据插入新的临时视图
     ' set IDENTITY_INSERT %s.dbo.%s OFF ' +                           // 2 关闭将显式值插入视图的标识列中
     ' DROP TABLE %s.dbo.%s ' +                                        // 3 删除旧视图
     ' EXEC sp_rename N''%s.dbo.%s'', N''%s'';';                       // 4 将临时新视图重命名为旧视图名
@@ -187,13 +187,13 @@ begin
         strFields        := GetDataFields(strOldDataBaseName, strUpdateDatabaseName, strTableName);
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                //
-          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName, // 1 创建临时新视图
-          strOldDataBaseName, strTempTableName,                                      // 2 开启将显式值插入视图的标识列中
-          strTempTableName, strFields, strFields, strOldDataBaseName, strTableName,  // 2 将旧视图数据插入新的临时视图
-          strOldDataBaseName, strTempTableName,                                      // 2 关闭将显式值插入视图的标识列中
-          strOldDataBaseName, strTableName,                                          // 3 删除旧视图
-          strOldDataBaseName, strTempTableName, strTableName                         // 4 将临时新视图重命名为旧视图名
+        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                                    //
+          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName,                     // 1 创建临时新视图
+          strOldDataBaseName, strTempTableName,                                                          // 2 开启将显式值插入视图的标识列中
+          strOldDataBaseName, strTempTableName, strFields, strFields, strOldDataBaseName, strTableName,  // 2 将旧视图数据插入新的临时视图
+          strOldDataBaseName, strTempTableName,                                                          // 2 关闭将显式值插入视图的标识列中
+          strOldDataBaseName, strTableName,                                                              // 3 删除旧视图
+          strOldDataBaseName, strTempTableName, strTableName                                             // 4 将临时新视图重命名为旧视图名
           ]);
         try
           frmUpdate.qry4.ExecSQL;
