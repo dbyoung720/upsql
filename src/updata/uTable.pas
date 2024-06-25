@@ -20,14 +20,14 @@ uses Unit1;
 { 比较两表结构是否相同 }
 function SameTableStructure(const strOldDataBaseName, strUpdateDatabaseName, strTableName: string): Boolean;
 const
-  c_strSQL =                                                                                                                                                                                                                                                                                                              //
-    ' select * from (  ' +                                                                                                                                                                                                                                                                                                //
-    '   select name,xtype,typestat,xusertype,length,xprec,xscale,colid,xoffset,bitpos,colstat,cdefault,domain,number,colorder,offset,collation,language,status,type,usertype,prec,scale,iscomputed, isoutparam, isnullable from %s.dbo.syscolumns ' + ' where id=(select id from %s.dbo.sysobjects where name=''%s'') ' + //
-    ' ) A ' +                                                                                                                                                                                                                                                                                                             //
-    ' except ' +                                                                                                                                                                                                                                                                                                          //
-    ' select * from  ' +                                                                                                                                                                                                                                                                                                  //
-    ' (  ' +                                                                                                                                                                                                                                                                                                              //
-    '   select name,xtype,typestat,xusertype,length,xprec,xscale,colid,xoffset,bitpos,colstat,cdefault,domain,number,colorder,offset,collation,language,status,type,usertype,prec,scale,iscomputed, isoutparam, isnullable from %s.dbo.syscolumns ' + ' where id=(select id from %s.dbo.sysobjects where name=''%s'') ' + //
+  c_strSQL =                                                                                                                                                                                                                                                                                                     //
+    ' select * from (  ' +                                                                                                                                                                                                                                                                                       //
+    '   select name,xtype,typestat,xusertype,length,xprec,xscale,colid,xoffset,bitpos,colstat,domain,number,colorder,offset,collation,language,status,type,usertype,prec,scale,iscomputed, isoutparam, isnullable from %s.dbo.syscolumns ' + ' where id=(select id from %s.dbo.sysobjects where name=''%s'') ' + //
+    ' ) A ' +                                                                                                                                                                                                                                                                                                    //
+    ' except ' +                                                                                                                                                                                                                                                                                                 //
+    ' select * from  ' +                                                                                                                                                                                                                                                                                         //
+    ' (  ' +                                                                                                                                                                                                                                                                                                     //
+    '   select name,xtype,typestat,xusertype,length,xprec,xscale,colid,xoffset,bitpos,colstat,domain,number,colorder,offset,collation,language,status,type,usertype,prec,scale,iscomputed, isoutparam, isnullable from %s.dbo.syscolumns ' + ' where id=(select id from %s.dbo.sysobjects where name=''%s'') ' + //
     ' ) B';
 begin
   frmUpdate.qry3.Close;
@@ -44,12 +44,12 @@ var
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
-  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strOldDataBaseName]);
+  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strOldDataBaseName]);
   frmUpdate.qry1.Open;
 
   frmUpdate.qry2.Close;
   frmUpdate.qry2.SQL.Clear;
-  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strUpdateDatabaseName]);
+  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strUpdateDatabaseName]);
   frmUpdate.qry2.Open;
 
   frmUpdate.qry2.First;
@@ -62,7 +62,7 @@ begin
       frmUpdate.LogInfo(Format('创建新表：%s', [strTableName]));
       frmUpdate.qry3.Close;
       frmUpdate.qry3.SQL.Clear;
-      frmUpdate.qry3.SQL.Text := Format('use master select * into %s.dbo.%s from %s.dbo.%s where 0=1;', [strOldDataBaseName, strTableName, strUpdateDatabaseName, strTableName]);
+      frmUpdate.qry3.SQL.Text := Format('select * into %s.dbo.%s from %s.dbo.%s where 0=1', [strOldDataBaseName, strTableName, strUpdateDatabaseName, strTableName]);
       try
         frmUpdate.qry3.ExecSQL;
       except
@@ -84,12 +84,12 @@ var
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
-  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strOldDataBaseName]);
+  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strOldDataBaseName]);
   frmUpdate.qry1.Open;
 
   frmUpdate.qry2.Close;
   frmUpdate.qry2.SQL.Clear;
-  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strUpdateDatabaseName]);
+  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strUpdateDatabaseName]);
   frmUpdate.qry2.Open;
 
   frmUpdate.qry1.First;
@@ -150,13 +150,13 @@ end;
 { 升级已存在的表 }
 procedure UpdateYesExistTable(const strOldDataBaseName, strUpdateDatabaseName: string);
 const
-  c_strSQL =                                                          //
-    ' Use master select * into %s.dbo.%s from %s.dbo.%s where 0=1 ' + // 1 创建临时新表
-    ' set IDENTITY_INSERT %s.dbo.%s ON ' +                            // 2 开启将显式值插入表的标识列中
-    ' INSERT INTO %s.dbo.%s(%s) select %s from %s.dbo.%s ' +          // 2 将旧表数据插入新的临时表
-    ' set IDENTITY_INSERT %s.dbo.%s OFF ' +                           // 2 关闭将显式值插入表的标识列中
-    ' DROP TABLE %s.dbo.%s ' +                                        // 3 删除旧表
-    ' EXEC sp_rename N''%s.dbo.%s'', N''%s'';';                       // 4 将临时新表重命名为旧表名
+  c_strSQL =                                                 //
+    ' select * into %s.dbo.%s from %s.dbo.%s where 0=1 ' +   // 1 创建临时新表
+    ' set IDENTITY_INSERT %s.dbo.%s ON ' +                   // 2 开启将显式值插入表的标识列中
+    ' INSERT INTO %s.dbo.%s(%s) select %s from %s.dbo.%s ' + // 2 将旧表数据插入新的临时表
+    ' set IDENTITY_INSERT %s.dbo.%s OFF ' +                  // 2 关闭将显式值插入表的标识列中
+    ' DROP TABLE %s.dbo.%s ' +                               // 3 删除旧表
+    ' use %s EXEC sp_rename N''%s'', N''%s''';              // 4 将临时新表重命名为旧表名
 var
   strTableName    : string;
   strTempTableName: string;
@@ -164,12 +164,12 @@ var
 begin
   frmUpdate.qry1.Close;
   frmUpdate.qry1.SQL.Clear;
-  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strOldDataBaseName]);
+  frmUpdate.qry1.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strOldDataBaseName]);
   frmUpdate.qry1.Open;
 
   frmUpdate.qry2.Close;
   frmUpdate.qry2.SQL.Clear;
-  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name;', [strUpdateDatabaseName]);
+  frmUpdate.qry2.SQL.Text := Format('use %s select name from sys.tables where type=''U'' ORDER BY name', [strUpdateDatabaseName]);
   frmUpdate.qry2.Open;
 
   frmUpdate.qry2.First;
@@ -183,17 +183,17 @@ begin
       if not SameTableStructure(strOldDataBaseName, strUpdateDatabaseName, strTableName) then
       begin
         frmUpdate.LogInfo(Format('升级表：%s', [strTableName]));
-        strTempTableName := 'temp_' + strTableName;
+        strTempTableName := 'db_temp_' + strTableName;
         strFields        := GetDataFields(strOldDataBaseName, strUpdateDatabaseName, strTableName);
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                                    //
-          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName,                     // 1 创建临时新表
-          strOldDataBaseName, strTempTableName,                                                          // 2 开启将显式值插入表的标识列中
-          strOldDataBaseName, strTempTableName, strFields, strFields, strOldDataBaseName, strTableName,  // 2 将旧表数据插入新的临时表
-          strOldDataBaseName, strTempTableName,                                                          // 2 关闭将显式值插入表的标识列中
-          strOldDataBaseName, strTableName,                                                              // 3 删除旧表
-          strOldDataBaseName, strTempTableName, strTableName                                             // 4 将临时新表重命名为旧表名
+        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                                   //
+          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName,                    // 1 创建临时新表
+          strOldDataBaseName, strTempTableName,                                                         // 2 开启将显式值插入表的标识列中
+          strOldDataBaseName, strTempTableName, strFields, strFields, strOldDataBaseName, strTableName, // 2 将旧表数据插入新的临时表
+          strOldDataBaseName, strTempTableName,                                                         // 2 关闭将显式值插入表的标识列中
+          strOldDataBaseName, strTableName,                                                             // 3 删除旧表
+          strOldDataBaseName, strTempTableName, strTableName                                            // 4 将临时新表重命名为旧表名
           ]);
         try
           frmUpdate.qry4.ExecSQL;

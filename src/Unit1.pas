@@ -161,7 +161,7 @@ const
     'FROM DISK = %s ' +          //
     'WITH REPLACE, RECOVERY, ' + //
     'MOVE %s TO %s, ' +          //
-    'MOVE %s TO %s; ';
+    'MOVE %s TO %s ';
 var
   strDBPath: string;
 begin

@@ -50,18 +50,24 @@ begin
       if frmUpdate.qry3.RecordCount > 0 then
       begin
         frmUpdate.LogInfo(Format('创建存储过程：%s', [strProcName]));
-        frmUpdate.qry4.Close;
-        frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Text := Format('use %s %s', [strOldDataBaseName, frmUpdate.qry3.Fields[0].AsString]);
-        try
-          frmUpdate.qry4.ExecSQL;
-        except
-          on E: Exception do
-          begin
-            frmUpdate.LogInfo(Format('创建存储过程失败。存储过程名称: %s，原因: %s', [strProcName, E.Message]));
-            frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
-          end;
-        end;
+        // frmUpdate.qry4.Close;
+        // frmUpdate.qry4.SQL.Clear;
+        // frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
+        // frmUpdate.qry4.SQL.Add('GO');
+        // frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
+        // frmUpdate.qry4.SQL.Add('GO');
+        // frmUpdate.qry4.SQL.Add('SET QUOTED_IDENTIFIER ON');
+        // frmUpdate.qry4.SQL.Add('GO');
+        // frmUpdate.qry4.SQL.Add(Format('%s', [frmUpdate.qry3.Fields[0].AsString]));
+        // try
+        // frmUpdate.qry4.ExecSQL;
+        // except
+        // on E: Exception do
+        // begin
+        // frmUpdate.LogInfo(Format('创建存储过程失败。存储过程名称: %s，原因: %s', [strProcName, E.Message]));
+        // frmUpdate.LogInfo(frmUpdate.qry4.SQL.Text);
+        // end;
+        // end;
       end;
     end;
     frmUpdate.qry2.Next;
