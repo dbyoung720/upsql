@@ -101,7 +101,7 @@ begin
       except
         on E: Exception do
         begin
-          frmUpdate.LogInfo(Format('删除自定义函数失败。触发器名称: %s，原因: %s', [strFuncName, E.Message]));
+          frmUpdate.LogInfo(Format('删除自定义函数失败。函数名称: %s，原因: %s', [strFuncName, E.Message]));
           frmUpdate.LogInfo(frmUpdate.qry3.SQL.Text);
         end;
       end;
@@ -182,7 +182,7 @@ begin
         except
           on E: Exception do
           begin
-            frmUpdate.LogInfo(Format('升级自定义函数失败1。自定义函数名称: %s，原因: %s', [strFuncName, E.Message]));
+            frmUpdate.LogInfo(Format('升级自定义函数失败1。函数名称: %s，原因: %s', [strFuncName, E.Message]));
             frmUpdate.LogInfo(frmUpdate.qry3.SQL.Text);
           end;
         end;
