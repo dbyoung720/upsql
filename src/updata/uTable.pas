@@ -37,6 +37,64 @@ begin
   Result := frmUpdate.qry3.RecordCount = 0;
 end;
 
+{ 新表添加主键、索引 }
+function GetCreateKeyIndexSql(const strOldDataBaseName, strUpdateDatabaseName, strOldTableName, strUpdateTableName: string): string;
+const
+  c_strSQL =                                                                                      //
+    ' use %s ' +                                                                                  //
+    ' SELECT ' +                                                                                  //
+    '     t.name AS TableName, ' +                                                                //
+    '     i.name AS IndexName, ' +                                                                //
+    '     i.type_desc,' +                                                                         //
+    '     i.is_primary_key,' +                                                                    //
+    '     c.name AS ColumnName ' +                                                                //
+    ' FROM     ' +                                                                                //
+    '     sys.indexes AS i ' +                                                                    //
+    ' INNER JOIN ' +                                                                              //
+    '     sys.index_columns AS ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id  ' + //
+    ' INNER JOIN ' +                                                                              //
+    '     sys.columns AS c ON ic.object_id = c.object_id AND ic.column_id = c.column_id ' +       //
+    ' INNER JOIN      ' +                                                                         //
+    '     sys.tables AS t ON i.object_id = t.object_id ' +                                        //
+    ' WHERE     ' +                                                                               //
+    '     t.is_ms_shipped = 0 and t.name = %s ' +                                                 //
+    ' ORDER BY         ' +                                                                        //
+    '     t.name, i.name, ic.key_ordinal';
+var
+  strlist: TStringList;
+begin
+  Result := '';
+  frmUpdate.qry4.Close;
+  frmUpdate.qry4.SQL.Clear;
+  frmUpdate.qry4.SQL.Text := Format(c_strSQL, [strUpdateDatabaseName, QuotedStr(strUpdateTableName)]);
+  frmUpdate.qry4.Open;
+  if frmUpdate.qry4.RecordCount <= 0 then
+    Exit;
+
+  strlist := TStringList.Create;
+  try
+    strlist.Add(Format(' USE %s ', [strOldDataBaseName]));
+    strlist.Add(Format(' ALTER TABLE %s ', [strOldTableName]));
+
+    frmUpdate.qry4.First;
+    while not frmUpdate.qry4.Eof do
+    begin
+      if frmUpdate.qry4.FieldByName('is_primary_key').AsBoolean then
+      begin
+        strlist.Add(Format(' ADD CONSTRAINT %s PRIMARY KEY (%s) ', [frmUpdate.qry4.FieldByName('IndexName').AsString, frmUpdate.qry4.FieldByName('ColumnName').AsString]));
+      end
+      else
+      begin
+        strlist.Add(Format(' CREATE INDEX %s ON %s(%s) ', [frmUpdate.qry4.FieldByName('IndexName').AsString, strOldTableName, frmUpdate.qry4.FieldByName('ColumnName').AsString]));
+      end;
+      frmUpdate.qry4.Next;
+    end;
+    Result := strlist.Text;
+  finally
+    strlist.free;
+  end;
+end;
+
 { 创建不存在的表 }
 procedure CreateNotExistTable(const strOldDataBaseName, strUpdateDatabaseName: string);
 var
@@ -62,7 +120,8 @@ begin
       frmUpdate.LogInfo(Format('创建新表：%s', [strTableName]));
       frmUpdate.qry3.Close;
       frmUpdate.qry3.SQL.Clear;
-      frmUpdate.qry3.SQL.Text := Format('select * into %s.dbo.%s from %s.dbo.%s where 0=1', [strOldDataBaseName, strTableName, strUpdateDatabaseName, strTableName]);
+      frmUpdate.qry3.SQL.Add(Format('select * into %s.dbo.%s from %s.dbo.%s where 0=1', [strOldDataBaseName, strTableName, strUpdateDatabaseName, strTableName]));
+      frmUpdate.qry3.SQL.Add(GetCreateKeyIndexSql(strOldDataBaseName, strUpdateDatabaseName, strTableName, strTableName));
       try
         frmUpdate.qry3.ExecSQL;
       except
@@ -144,7 +203,7 @@ begin
     frmUpdate.qry4.Next;
   end;
   Result := lstFields.DelimitedText;
-  lstFields.Free;
+  lstFields.free;
 end;
 
 { 升级已存在的表 }
@@ -152,6 +211,7 @@ procedure UpdateYesExistTable(const strOldDataBaseName, strUpdateDatabaseName: s
 const
   c_strSQL =                                                 //
     ' select * into %s.dbo.%s from %s.dbo.%s where 0=1 ' +   // 1 创建临时新表
+    ' %s ' +                                                 // 1 临时新表添加主键、索引
     ' set IDENTITY_INSERT %s.dbo.%s ON ' +                   // 2 开启将显式值插入表的标识列中
     ' INSERT INTO %s.dbo.%s(%s) select %s from %s.dbo.%s ' + // 2 将旧表数据插入新的临时表
     ' set IDENTITY_INSERT %s.dbo.%s OFF ' +                  // 2 关闭将显式值插入表的标识列中
@@ -187,13 +247,14 @@ begin
         strFields        := GetDataFields(strOldDataBaseName, strUpdateDatabaseName, strTableName);
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                                   //
-          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName,                    // 1 创建临时新表
-          strOldDataBaseName, strTempTableName,                                                         // 2 开启将显式值插入表的标识列中
-          strOldDataBaseName, strTempTableName, strFields, strFields, strOldDataBaseName, strTableName, // 2 将旧表数据插入新的临时表
-          strOldDataBaseName, strTempTableName,                                                         // 2 关闭将显式值插入表的标识列中
-          strOldDataBaseName, strTableName,                                                             // 3 删除旧表
-          strOldDataBaseName, strTempTableName, strTableName                                            // 4 将临时新表重命名为旧表名
+        frmUpdate.qry4.SQL.Text := Format(c_strSQL, [                                                      //
+          strOldDataBaseName, strTempTableName, strUpdateDatabaseName, strTableName,                       // 1 创建临时新表
+          GetCreateKeyIndexSql(strOldDataBaseName, strUpdateDatabaseName, strTempTableName, strTableName), // 1 临时新表添加主键、索引
+          strOldDataBaseName, strTempTableName,                                                            // 2 开启将显式值插入表的标识列中
+          strOldDataBaseName, strTempTableName, strFields, strFields, strOldDataBaseName, strTableName,    // 2 将旧表数据插入新的临时表
+          strOldDataBaseName, strTempTableName,                                                            // 2 关闭将显式值插入表的标识列中
+          strOldDataBaseName, strTableName,                                                                // 3 删除旧表
+          strOldDataBaseName, strTempTableName, strTableName                                               // 4 将临时新表重命名为旧表名
           ]);
         try
           frmUpdate.qry4.ExecSQL;
