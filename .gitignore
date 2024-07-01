@@ -5,7 +5,4 @@
 *.tvsconfig
 *.rsm
 *.pdb
-/src/Win32/Debug/upsql.exe
-/src/Win32/Release/upsql.exe
-/src/Win32/Debug/ddd.udl
-/src/Win32/Release/ddd.udl
+/src/Win32

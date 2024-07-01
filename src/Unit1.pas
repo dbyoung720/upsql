@@ -26,6 +26,8 @@ type
   private
     { 列举所有库 }
     procedure GetDatabaseLibraryList;
+    { 获取当前目录下是否有数据库备份文件 }
+    procedure GetDatabaseBackupFile;
     { 新的数据库还原 }
     function RestoreDatabase(const strBakFileName, strDBDataName, strDBLogName: string; var strUpdateDatabaseName: string): Boolean;
     { 删除临时的升级数据库 }
@@ -120,6 +122,7 @@ begin
     con1.Connected := True;
     Caption        := '数据库升级---数据库连接成功';
     GetDatabaseLibraryList;
+    GetDatabaseBackupFile;
   except
     Caption := '数据库升级---数据库连接失败';
   end;
@@ -140,7 +143,22 @@ begin
       cbbLibrary.Items.Add(qry1.Fields[0].AsString);
       qry1.Next;
     end;
+    cbbLibrary.ItemIndex := cbbLibrary.Items.IndexOf(con1.Properties['Initial Catalog'].Value);
   end;
+end;
+
+{ 获取当前目录下是否有数据库备份文件 }
+procedure TfrmUpdate.GetDatabaseBackupFile;
+var
+  mfiles     : TStringDynArray;
+  strFileName: String;
+begin
+  mfiles := TDirectory.GetFiles(ExtractFilePath(ParamStr(0)), '*.bak');
+  if Length(mfiles) <= 0 then
+    Exit;
+
+  strFileName         := mfiles[0];
+  edtBakFileName.Text := strFileName;
 end;
 
 { 删除临时的升级数据库 }
