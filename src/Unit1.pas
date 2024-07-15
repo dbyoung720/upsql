@@ -150,15 +150,13 @@ end;
 { 获取当前目录下是否有数据库备份文件 }
 procedure TfrmUpdate.GetDatabaseBackupFile;
 var
-  mfiles     : TStringDynArray;
-  strFileName: String;
+  mfiles: TStringDynArray;
 begin
   mfiles := TDirectory.GetFiles(ExtractFilePath(ParamStr(0)), '*.bak');
   if Length(mfiles) <= 0 then
     Exit;
 
-  strFileName         := mfiles[0];
-  edtBakFileName.Text := strFileName;
+  edtBakFileName.Text := mfiles[0];
 end;
 
 { 删除临时的升级数据库 }

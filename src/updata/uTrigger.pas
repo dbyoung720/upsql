@@ -51,7 +51,7 @@ begin
       if frmUpdate.qry3.RecordCount > 0 then
       begin
         frmUpdate.LogInfo(Format('´´½¨´¥·¢Æ÷£º%s', [strTriggerName]));
-        strTempFile := TPath.GetTempPath + 'update.sql';
+        strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
         frmUpdate.qry4.SQL.Clear;
         frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
         frmUpdate.qry4.SQL.Add('GO');
@@ -193,7 +193,7 @@ begin
         begin
           frmUpdate.qry4.Close;
           frmUpdate.qry4.SQL.Clear;
-          strTempFile := TPath.GetTempPath + 'update.sql';
+          strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
           frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
           frmUpdate.qry4.SQL.Add('GO');
           frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');

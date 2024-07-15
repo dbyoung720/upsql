@@ -53,7 +53,7 @@ begin
         frmUpdate.LogInfo(Format('创建存储过程：%s', [strProcName]));
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        strTempFile := TPath.GetTempPath + 'update.sql';
+        strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
         frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
         frmUpdate.qry4.SQL.Add('GO');
         frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
@@ -194,7 +194,7 @@ begin
         begin
           frmUpdate.qry4.Close;
           frmUpdate.qry4.SQL.Clear;
-          strTempFile := TPath.GetTempPath + 'update.sql';
+          strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
           frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
           frmUpdate.qry4.SQL.Add('GO');
           frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');

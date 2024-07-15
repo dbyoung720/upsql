@@ -54,7 +54,7 @@ begin
         frmUpdate.LogInfo(Format('创建自定义函数：%s', [strFuncName]));
         frmUpdate.qry4.Close;
         frmUpdate.qry4.SQL.Clear;
-        strTempFile := TPath.GetTempPath + 'update.sql';
+        strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
         frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
         frmUpdate.qry4.SQL.Add('GO');
         frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
@@ -136,11 +136,11 @@ begin
     strNewFuncCode := Trim(frmUpdate.qry4.Fields[0].AsString);
     if (strOldFuncCode <> '') and (strNewFuncCode <> '') then
     begin
-			if not SameText(strOldFuncCode, strNewFuncCode) then
-			begin
-				Result := False;
-				Break;
-			end;
+      if not SameText(strOldFuncCode, strNewFuncCode) then
+      begin
+        Result := False;
+        Break;
+      end;
     end;
     frmUpdate.qry3.Next;
     frmUpdate.qry4.Next;
@@ -195,7 +195,7 @@ begin
         begin
           frmUpdate.qry4.Close;
           frmUpdate.qry4.SQL.Clear;
-          strTempFile := TPath.GetTempPath + 'update.sql';
+          strTempFile := Format(TPath.GetTempPath + 'update%s.sql', [FormatDateTime('yyyyMMddhhmmssZZZ', Now)]);
           frmUpdate.qry4.SQL.Add(Format('use [%s]', [strOldDataBaseName]));
           frmUpdate.qry4.SQL.Add('GO');
           frmUpdate.qry4.SQL.Add('SET ANSI_NULLS ON');
